@@ -1,0 +1,50 @@
+--How many khipus are in this database?
+SELECT COUNT(khipu_id)
+FROM khipu_main
+
+--How many cords?
+SELECT COUNT(cord_id)
+FROM cord
+
+--How many cords does each khipu have? (from largest to smallest)
+SELECT khipu_id, COUNT(cord_id)
+FROM cord
+GROUP BY khipu_id
+ORDER BY COUNT(cord_id) DESC
+
+--Use SQL sum() to find the value of each cord in the database
+SELECT cord_id, SUM(knot_value_type)
+FROM knot
+GROUP BY cord_id
+ORDER BY SUM(knot_value_type) DESC
+
+--Find the values of all cords with knots in a given khipu using HAVING. This example is for khipu ID 1000000
+SELECT khipu_id, cord.cord_id, SUM(knot_value_type)
+FROM cord
+INNER JOIN knot
+ON cord.cord_id = knot.cord_id
+GROUP BY cord.cord_id
+HAVING khipu_id == 1000000
+
+--Khipus that have cords with very high cord values, with at least one cord with a value greater than 10,000 (uses a semi-join)
+SELECT khipu_id
+FROM cord
+WHERE cord_id IN
+	(SELECT cord_id
+	FROM knot
+	GROUP BY cord_id
+	HAVING SUM(knot_value_type) >10000)
+GROUP BY khipu_id
+
+--Use a subquery and anti-join to show khipus that don't have any knots
+SELECT khipu_id
+FROM khipu_main
+WHERE khipu_id NOT IN(
+	SELECT khipu_id
+	FROM cord
+	WHERE cord_id IN
+		(SELECT cord_id
+		FROM knot
+		GROUP BY cord_id)
+	GROUP BY khipu_id)
+
